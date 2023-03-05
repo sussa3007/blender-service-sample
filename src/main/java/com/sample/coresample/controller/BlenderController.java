@@ -37,9 +37,7 @@ public class BlenderController {
     public ModelAndView callBlender(
             @ModelAttribute ModelRequestDto requestDto
     ) {
-        System.out.println(requestDto);
-        ModelResponseDto modelResponseDto = blenderService.uploadModel(requestDto);
-        System.out.println(modelResponseDto);
+        ModelResponseDto modelResponseDto = blenderService.generateModel(requestDto);
 
         if (modelResponseDto == null) {
             return new ModelAndView(
@@ -60,7 +58,7 @@ public class BlenderController {
     public ResponseEntity callBlenderAPI(
             @RequestBody ModelRequestDto requestDto
     ) {
-        ModelResponseDto modelResponseDto = blenderService.uploadModel(requestDto);
+        ModelResponseDto modelResponseDto = blenderService.generateModel(requestDto);
         return ResponseEntity.ok().body(modelResponseDto);
     }
 }

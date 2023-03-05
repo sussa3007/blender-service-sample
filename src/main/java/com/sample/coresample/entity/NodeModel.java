@@ -48,6 +48,10 @@ public class NodeModel {
     @Column(nullable = false)
     Double vGapFrequency;
 
+    @Setter
+    @Column(nullable = false)
+    String extension;
+
 
     NodeModel(ModelRequestDto requestDto) {
         this.width = requestDto.getWidth();
@@ -56,6 +60,7 @@ public class NodeModel {
         this.upperFloor = requestDto.getUpperFloor();
         this.ringFrequency = requestDto.getRingFrequency();
         this.vGapFrequency = requestDto.getGapFrequency();
+        this.extension = requestDto.getExtension();
     }
 
     public static NodeModel of(ModelRequestDto requestDto){
