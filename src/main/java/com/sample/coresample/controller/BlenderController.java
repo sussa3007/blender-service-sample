@@ -22,13 +22,29 @@ public class BlenderController {
 
     final BlenderService blenderService;
 
+    @GetMapping("/viewer/gltf")
+    public ModelAndView gltf() {
+        return new ModelAndView("blender/gltf");
+    }
+
+    @GetMapping("/viewer/obj")
+    public ModelAndView obj() {
+        return new ModelAndView("blender/obj");
+    }
+
+    @GetMapping("/viewer/fbx")
+    public ModelAndView fbx() {
+        return new ModelAndView("blender/fbx");
+    }
+
     @GetMapping
     public ModelAndView home() {
 
         return new ModelAndView(
-                "blender/home"
-                ,Map.of(
-                        "blenderUrl", "https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/image/test.obj"
+                "blender/index"
+                , Map.of(
+                "fileName", "ToyCar"
+//                "fileName", "693ab010-40e3-4b95-b29e-6294337984bf"
         )
         );
     }
@@ -39,19 +55,11 @@ public class BlenderController {
     ) {
         ModelResponseDto modelResponseDto = blenderService.generateModel(requestDto);
 
-        if (modelResponseDto == null) {
-            return new ModelAndView(
-                    "blender/home"
-                    ,Map.of(
-                    "blenderUrl", "https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/image/test.obj")
-            );
-        } else {
-            return new ModelAndView(
-                    "blender/response"
-                    ,Map.of(
-                    "response", modelResponseDto)
-            );
-        }
+        return new ModelAndView(
+                "blender/response"
+                , Map.of(
+                "response", modelResponseDto)
+        );
     }
 
     @PostMapping("/api")
@@ -61,4 +69,14 @@ public class BlenderController {
         ModelResponseDto modelResponseDto = blenderService.generateModel(requestDto);
         return ResponseEntity.ok().body(modelResponseDto);
     }
+
+    @PostMapping("/api/upload")
+    public ResponseEntity uploadPathFile(
+            @RequestBody Map<String, String> filePath
+    ) {
+        System.out.println("filePath :: " + filePath.get("filePath"));
+        String fileUrl = blenderService.uploadPathFile(filePath.get("filePath"), filePath.get("dir"));
+        return ResponseEntity.ok(Map.of("url", fileUrl));
+    }
+
 }
