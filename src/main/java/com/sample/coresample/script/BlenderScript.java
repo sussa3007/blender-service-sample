@@ -27,7 +27,7 @@ public class BlenderScript {
                 getModifiersAdd("NODES")+
                 getSelectAll()+
                 getNodeGroups("319_4-8_ver.2")+
-                getExportObj(RenderPath.OUTPUT_PATH.getPath(), node.getFileName())+
+                getExportObj(RenderPath.OUTPUT_PATH.getPath(), node.getFileName()+node.getExtension())+
                 getSaveMainFile(RenderPath.BLEND_PATH.getPath());
 
     }
