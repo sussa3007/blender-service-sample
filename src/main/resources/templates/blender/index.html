@@ -47,7 +47,6 @@
         .render {
             margin-top: 2em;
         }
-
         .box {
             padding: 1em;
         }
@@ -70,9 +69,9 @@
         <form id="createForm"
               class="bg-gray-500 shadow-md rounded px-8 pt-6 pb-8 mb-4">
             <input type="hidden" id="csrf" >
-            <!--            <h2 class="text-xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">-->
-            <!--                <span id="infoTitle">Parameter</span>-->
-            <!--            </h2>-->
+<!--            <h2 class="text-xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">-->
+<!--                <span id="infoTitle">Parameter</span>-->
+<!--            </h2>-->
             <div class="mb-2">
                 <label for="width" class="block text-black-700 text-sm font-bold mb-2">
                     Width
@@ -125,7 +124,8 @@
                     File Extension
                 </label>
                 <select id="extension" name="extension"
-                        class="shadow appearance-none border rounded w-full py-1 px-1 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline">
+                        class="shadow appearance-none border rounded w-full py-1 px-1 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
                     <option>.obj</option>
                     <option>.fbx</option>
                 </select>
@@ -133,16 +133,12 @@
 
 
             <div class="flex items-center justify-between">
-                <button id="download" type="button"
-                        th:onclick="'location.href=\'' + @{*{response?.modelUrl}} + '\''"
+                <button id="submit" type="submit"
+                        th:form="createForm"
+                        th:formaction="@{/blender}"
+                        th:formmethod="post"
                         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Download
-                </button>
-                <button id="home" type="button"
-                        class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded"
-                        th:onclick="|location.href='@{/blender}'|"
-                >
-                    Home
+                    Generate
                 </button>
             </div>
         </form>
@@ -151,7 +147,7 @@
 </div>
 <script th:inline="javascript">
     let scene, camera, renderer;
-    var fileName = [[@{__${response?.fileName}__}]];
+    const fileName = [[@{__${fileName}__}]];
     const myCanvas = document.querySelector('#canvas');
     const myLoader = document.querySelector('#loader');
 
@@ -161,33 +157,35 @@
     camera.position.x = 150;
     camera.position.y = 250;
 
-    var light = new THREE.AmbientLight(0xffffff);
+    let light = new THREE.AmbientLight(0xffffff);
     scene.add(light);
 
     light = new THREE.HemisphereLight(0x444444, 0x444444, 1.0);
     light.position.set(0, 1, 0);
     scene.add(light);
 
-    var directionalLight = new THREE.DirectionalLight(0xffeedd);
+    let directionalLight = new THREE.DirectionalLight(0xffeedd);
     directionalLight.position.set(0, 1, 0).normalize();
     scene.add(directionalLight);
 
-    var mesh = null;
+    let mesh = null;
 
-    var mtlLoader = new THREE.MTLLoader();
+    const mtlLoader = new THREE.MTLLoader();
     mtlLoader.setPath('https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/obj/')
+
     const manager = new THREE.LoadingManager();
 
     manager.onLoad = function () {
         myLoader.style.display = "none";
         console.log('Loading complete!');
     };
-    mtlLoader.load('model/'+fileName+'.mtl', function (materials) {
+
+    mtlLoader.load('model/' + fileName + '.mtl', function (materials) {
         materials.preload();
-        var objLoader = new THREE.OBJLoader(manager);
+        const objLoader = new THREE.OBJLoader(manager);
         objLoader.setMaterials(materials);
         objLoader.setPath('https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/obj/')
-        objLoader.load('model/'+fileName+'.obj', function (object) {
+        objLoader.load('model/' + fileName + '.obj', function (object) {
             mesh = object;
             scene.add(mesh);
         });
@@ -202,6 +200,7 @@
     // controls.addEventListener('change', renderer);
 
     animate();
+
 
     function animate() {
         renderer.render(scene, camera);
