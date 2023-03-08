@@ -4,7 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sample.coresample.constant.command.BlenderCommand;
-import com.sample.coresample.constant.file.FileProperty;
+import com.sample.coresample.constant.awsfile.FileProperty;
 import com.sample.coresample.constant.path.RenderPath;
 import com.sample.coresample.dto.ModelRequestDto;
 import com.sample.coresample.dto.ModelResponseDto;
@@ -45,7 +45,7 @@ public class BlenderService {
         NodeModel model = NodeModel.of(requestDto);
         UUID uuid = UUID.randomUUID();
 
-        model.setFileName(uuid + requestDto.getExtension());
+        model.setFileName(uuid.toString());
         String script = BlenderScript.of(model).getScript();
         String scriptPath = RenderPath.SCRIPT_PATH.getPath();
         String command = BlenderCommand.TEST_BLENDER.getCommand();
@@ -67,7 +67,7 @@ public class BlenderService {
                 log.error("Blender:: Error Occurred!!");
             }
 
-            return ModelResponseDto.of(clearOutputFile(model, scriptPath, uuid.toString()));
+            return ModelResponseDto.of(uploadAndClearOutputFile(model, scriptPath));
         } catch (IOException e) {
             log.error("Blender:: IOException starting process!");
             throw new RuntimeException("IOException starting process!");
@@ -76,21 +76,33 @@ public class BlenderService {
         }
     }
 
-    private NodeModel clearOutputFile(
+    public String uploadPathFile(String path, String dir) {
+        File file = new File(path);
+        String s3FileName = file.getName();
+        String fileName = dir +"/" + s3FileName;
+        return putS3(file, fileName);
+    }
+
+    private NodeModel uploadAndClearOutputFile(
             NodeModel model,
-            String scriptPath,
-            String uuid
+            String scriptPath
     ) throws IOException {
         Files.delete(Paths.get(scriptPath));
-        File file = new File(RenderPath.OUTPUT_PATH.getPath() + model.getFileName());
-        NodeModel upload = upload(file, FileProperty.BASIC_IMAGE_DIR_NAME.getName(), model);
-        Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + model.getFileName()));
-        Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + uuid + ".mtl"));
-        log.info("Local Output File 삭제 완료!");
+        NodeModel upload = null;
+        if (model.getExtension().contains("obj")) {
+            File obj = new File(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + model.getExtension());
+            File mtl = new File(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + ".mtl");
+
+            upload = uploadModel(obj, FileProperty.OBJ_DIR_NAME.getName(), model);
+            uploadModelSubFile(mtl, FileProperty.OBJ_DIR_NAME.getName());
+            Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + model.getExtension()));
+            Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + ".mtl"));
+            log.info("Local Output File(.obj & .mtl) 삭제 완료!");
+        }
         return upload;
     }
 
-    private NodeModel upload(
+    private NodeModel uploadModel(
             File uploadFile,
             String dirName,
             NodeModel model
@@ -100,6 +112,15 @@ public class BlenderService {
         String uploadImageUrl = putS3(uploadFile, fileName);
         model.setModelUrl(uploadImageUrl);
         return model;
+    }
+
+    private void uploadModelSubFile(
+            File uploadFile,
+            String dirName
+    ) {
+        String s3FileName = uploadFile.getName();
+        String fileName = dirName + "/" + s3FileName;
+        putS3(uploadFile, fileName);
     }
 
     private String putS3(
