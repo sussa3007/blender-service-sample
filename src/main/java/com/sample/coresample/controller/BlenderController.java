@@ -44,7 +44,9 @@ public class BlenderController {
                 "blender/index"
                 , Map.of(
 //                "fileName", "ToyCar"
-                "fileName", "693ab010-40e3-4b95-b29e-6294337984bf"
+//                "fileName", "693ab010-40e3-4b95-b29e-6294337984bf"
+//                "fileName", "koean style house"
+                "fileName", "sample"
         )
         );
     }
