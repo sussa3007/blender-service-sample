@@ -1,10 +1,10 @@
-package com.sample.coresample.constant.file;
+package com.sample.coresample.constant.awsfile;
 
 import lombok.Getter;
 
 public enum FileProperty {
 
-    BASIC_IMAGE_DIR_NAME("model");
+    OBJ_DIR_NAME("obj/model");
 
     @Getter
     private final String name;
