@@ -23,8 +23,10 @@
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xdddddd);
 
-        camera = new THREE.PerspectiveCamera(5, window.innerWidth/window.innerHeight, 1, 5000);
-        camera.position.z = 1000;
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 2000);
+        camera.position.z = 250;
+        camera.position.x = 150;
+        camera.position.y = 250;
 
         light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
         light.position.set(0, 1, 0);
@@ -44,7 +46,7 @@
         const fbxLoader = new THREE.FBXLoader();
         fbxLoader.setPath('https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/fbx/');
 
-        fbxLoader.load('model/fbxsample.fbx', (object) => {
+        fbxLoader.load('model/SM_gimhae_street_e_equip_a_01.fbx', (object) => {
             scene.add(object);
             animate();
         });
