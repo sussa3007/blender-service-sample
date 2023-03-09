@@ -39,12 +39,12 @@
         document.body.appendChild(renderer.domElement);
 
         controls = new THREE.OrbitControls(camera,  renderer.domElement);
-        controls.addEventListener('change', renderer);
+        // controls.addEventListener('change', renderer);
 
         const fbxLoader = new THREE.FBXLoader();
         fbxLoader.setPath('https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/fbx/');
 
-        fbxLoader.load('model/ToyCar.fbx', (object) => {
+        fbxLoader.load('model/fbxsample.fbx', (object) => {
             scene.add(object);
             animate();
         });

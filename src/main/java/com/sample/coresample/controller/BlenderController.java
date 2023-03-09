@@ -46,7 +46,9 @@ public class BlenderController {
 //                "fileName", "ToyCar"
 //                "fileName", "693ab010-40e3-4b95-b29e-6294337984bf"
 //                "fileName", "koean style house"
-                "fileName", "sample"
+//                "fileName", "sample"
+//                "fileName", "objsample"
+                "fileName", "SM_gimhae_street_e_equip_a_01"
         )
         );
     }
