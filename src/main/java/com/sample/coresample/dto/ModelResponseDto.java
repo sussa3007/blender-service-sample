@@ -27,6 +27,10 @@ public class ModelResponseDto {
 
     Double vGapFrequency;
 
+    String extension;
+
+    boolean isBool = false;
+
     ModelResponseDto(NodeModel node) {
         this.nodeModelId = node.getNodeModelId();
         this.fileName = node.getFileName();
@@ -37,6 +41,8 @@ public class ModelResponseDto {
         this.upperFloor = node.getUpperFloor();
         this.ringFrequency = node.getRingFrequency();
         this.vGapFrequency = node.getVGapFrequency();
+        this.extension = node.getExtension();
+        this.isBool = true;
     }
 
     public static ModelResponseDto of(NodeModel node) {
