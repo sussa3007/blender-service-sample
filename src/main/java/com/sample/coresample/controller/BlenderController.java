@@ -22,33 +22,68 @@ public class BlenderController {
 
     final BlenderService blenderService;
 
-    @GetMapping("/viewer/gltf")
+    @GetMapping("/gltf")
     public ModelAndView gltf() {
-        return new ModelAndView("blender/gltf");
-    }
-
-    @GetMapping("/viewer/obj")
-    public ModelAndView obj() {
-        return new ModelAndView("blender/obj");
-    }
-
-    @GetMapping("/viewer/fbx")
-    public ModelAndView fbx() {
-        return new ModelAndView("blender/fbx");
-    }
-
-    @GetMapping
-    public ModelAndView home() {
+        ModelResponseDto response = ModelResponseDto.builder()
+                .fileName("scene")
+                .isBool(false)
+                .extension(".gltf")
+                .build();
 
         return new ModelAndView(
-                "blender/index"
+                "blender/home"
                 , Map.of(
-//                "fileName", "ToyCar"
-//                "fileName", "693ab010-40e3-4b95-b29e-6294337984bf"
-//                "fileName", "koean style house"
-//                "fileName", "sample"
-//                "fileName", "objsample"
-                "fileName", "SM_gimhae_street_e_equip_a_01"
+                "response", response
+        )
+        );
+    }
+
+    @GetMapping("/obj")
+    public ModelAndView obj() {
+        ModelResponseDto response = ModelResponseDto.builder()
+                .fileName("SM_gimhae_street_e_equip_a_02")
+                .isBool(false)
+                .extension(".obj")
+                .build();
+
+        return new ModelAndView(
+                "blender/home"
+                , Map.of(
+                "response", response
+        )
+        );
+    }
+
+    @GetMapping("/fbx")
+    public ModelAndView fbx() {
+        ModelResponseDto response = ModelResponseDto.builder()
+                .fileName("SM_gimhae_street_e_equip_a_02")
+                .isBool(false)
+                .extension(".fbx")
+                .build();
+
+        return new ModelAndView(
+                "blender/home"
+                , Map.of(
+                "response", response
+        )
+        );
+    }
+
+    @GetMapping()
+    public ModelAndView home(
+    ) {
+        ModelResponseDto response = ModelResponseDto.builder()
+//                .fileName("test_sample")
+                .fileName("SM_gimhae_street_e_equip_a_01")
+                .isBool(false)
+                .extension(".gltf")
+                .build();
+
+        return new ModelAndView(
+                "blender/home"
+                , Map.of(
+                "response", response
         )
         );
     }
@@ -60,10 +95,12 @@ public class BlenderController {
         ModelResponseDto modelResponseDto = blenderService.generateModel(requestDto);
 
         return new ModelAndView(
-                "blender/response"
+                "blender/home"
                 , Map.of(
-                "response", modelResponseDto)
+                "response", modelResponseDto
+        )
         );
+
     }
 
     @PostMapping("/api")
@@ -73,6 +110,7 @@ public class BlenderController {
         ModelResponseDto modelResponseDto = blenderService.generateModel(requestDto);
         return ResponseEntity.ok().body(modelResponseDto);
     }
+
 
     @PostMapping("/api/upload")
     public ResponseEntity uploadPathFile(
