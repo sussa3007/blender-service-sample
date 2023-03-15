@@ -65,8 +65,8 @@
         loader.setPath('https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/gltf/')
         loader.load('scene.gltf', function(gltf){
             //Reduce the Car size by half
-            car = gltf.scene.children[0];
-            car.scale.set(0.5, 0.5, 0.5);
+            var model = gltf.scene.children[0];
+            model.scale.set(0.5, 0.5, 0.5);
             scene.add(gltf.scene);
             animate();
         });
