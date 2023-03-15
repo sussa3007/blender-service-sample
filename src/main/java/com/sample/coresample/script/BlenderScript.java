@@ -27,8 +27,16 @@ public class BlenderScript {
                 getModifiersAdd("NODES")+
                 getSelectAll()+
                 getNodeGroups("319_4-8_ver.2")+
-                getExportObj(RenderPath.OUTPUT_PATH.getPath(), node.getFileName()+node.getExtension())+
-                getSaveMainFile(RenderPath.BLEND_PATH.getPath());
+                getSelectAll()+
+                getDuplicatesMakeReal()+
+                getMoveToCollection()+
+                getSelectAll()+
+                getHideObjectForLoop()+
+                getSelectedObjectForLoop()+
+                getJoinObject()+
+                getSelectAll()+
+                getExportScript(RenderPath.OUTPUT_PATH.getPath(), node.getFileName()+node.getExtension(), node.getExtension())+
+                getQuitBlender();
 
     }
 
@@ -57,12 +65,17 @@ public class BlenderScript {
         return "bpy.ops.object.select_all(action=\"SELECT\")\n \n";
     }
 
-    private String getExportObj(String outputPath, String fileName) {
-        return "bpy.ops.wm.obj_export(\n" +
-                "filepath=\"" + outputPath + fileName + "\",\n" +
-                "export_selected_objects=True,\n" +
-                ")\n \n";
+
+    private String getExportScript(String outputPath, String fileName, String extension) {
+        if (extension.contains("obj")) {
+            return "bpy.ops.export_scene.obj(filepath = \"" + outputPath + fileName + "\", use_selection = True)\n \n";
+        } else if (extension.contains("fbx")) {
+            return "bpy.ops.export_scene.fbx(filepath = \"" + outputPath + fileName + "\", use_selection = True, use_visible = True)\n \n";
+        } else {
+            return null;
+        }
     }
+
 
     private String getSaveMainFile(String blendFilePath) {
         return "bpy.ops.wm.save_mainfile(filepath=\"" + blendFilePath + "\") \n";
@@ -74,6 +87,43 @@ public class BlenderScript {
 
     }
 
+    private String getJoinObject() {
+        return "bpy.ops.object.join() \n  \n";
+    }
+
+    private String getMoveToCollection() {
+        return "bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name=\"Generate\") \n  \n";
+    }
+
+    private String getDuplicatesMakeReal() {
+        return "bpy.ops.object.duplicates_make_real() \n  \n";
+    }
+
+    private String getHideObjectForLoop() {
+        return """
+                for o in bpy.context.selected_objects :
+                    if o.name == 'BuildingGenerator' :
+                        o.hide_set(True)
+                    else :\s
+                        o.hide_set(False)
+                        
+                        """;
+    }
+
+    private String getSelectedObjectForLoop() {
+        return """
+                Coll = bpy.data.collections['Generate']
+                for obj in Coll.objects:
+                    if obj.type == 'MESH':
+                       obj.select_set(True)
+                       bpy.context.view_layer.objects.active = obj
+                       
+                       """;
+    }
+
+    private String getQuitBlender() {
+        return "bpy.ops.wm.quit_blender() \n  \n";
+    }
 
 
 }
