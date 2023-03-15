@@ -68,6 +68,7 @@ public class BlenderService {
             }
 
             return ModelResponseDto.of(uploadAndClearOutputFile(model, scriptPath));
+
         } catch (IOException e) {
             log.error("Blender:: IOException starting process!");
             throw new RuntimeException("IOException starting process!");
@@ -98,6 +99,11 @@ public class BlenderService {
             Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + model.getExtension()));
             Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + ".mtl"));
             log.info("Local Output File(.obj & .mtl) 삭제 완료!");
+        } else if (model.getExtension().contains("fbx")) {
+            File fbx = new File(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + model.getExtension());
+            upload = uploadModel(fbx, FileProperty.FBX_DIR_NAME.getName(), model);
+            Files.delete(Paths.get(RenderPath.OUTPUT_PATH.getPath() + model.getFileName() + model.getExtension()));
+            log.info("Local Output File(.fbx) 삭제 완료!");
         }
         return upload;
     }
