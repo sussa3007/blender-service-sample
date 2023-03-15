@@ -4,13 +4,13 @@ public enum BlendFileName {
 
     BLEND_HOUSE("KPB-BrickHouseElements-modified_v02.blend");
 
-    final String path;
+    final String name;
 
-    BlendFileName(String path) {
-        this.path = path;
+    BlendFileName(String name) {
+        this.name = name;
     }
 
-    public String  getPath() {
-        return this.path;
+    public String getName() {
+        return this.name;
     }
 }
