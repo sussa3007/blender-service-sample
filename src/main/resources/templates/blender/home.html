@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Blender Generate</title>
+
+    <link rel="stylesheet" type="text/css" href="/files/main.css">
+
+    <style>
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #newWindow {
+            display: block;
+            position: absolute;
+            bottom: 0.3em;
+            left: 0.5em;
+            color: #fff;
+        }
+        #gltf {
+            display: block;
+            position: absolute;
+            bottom: 1.8em;
+            left: 0.5em;
+            color: #fff;
+        }
+        #fbx {
+            display: block;
+            position: absolute;
+            bottom: 3.3em;
+            left: 0.5em;
+            color: #fff;
+        }
+        #home {
+            display: block;
+            position: absolute;
+            bottom: 4.5em;
+            left: 0.5em;
+            color: #fff;
+        }
+
+
+        .loader {
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            position: fixed;
+            display: block;
+            opacity: 0.8;
+            background: white;
+            z-index: 99;
+            text-align: center;
+        }
+
+        .loader > img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+<div class="loader" id="loader">
+    <img src="https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/loadingImage/Brokenring.gif"
+         alt="loading">
+</div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "/node_modules/three/build/three.module.js",
+            "/node_modules/three/examples/jsm/libs/lil-gui.module.min.js":"/node_modules/three/examples/jsm/libs/lil-gui.module.min.js",
+            "/node_modules/three/examples/jsm/environments/RoomEnvironment.js":"/node_modules/three/examples/jsm/environments/RoomEnvironment.js",
+            "three/addons/": "/node_modules/three/examples/jsm/"
+        }
+    }
+
+
+
+
+</script>
+<a id='newWindow' href='/blender/obj'  >Sample OBJ - All Texture</a>
+<a id='gltf' href='/blender/gltf' >Car GLTF - All Texture</a>
+<a id='fbx' href='/blender/fbx' >Sample FBX - All Texture</a>
+<a id='home' href='/blender'  >Sample OBJ - One Texture</a>
+<script th:inline="javascript" th:type="module" th:defer>
+    import * as THREE from 'three';
+    import {GUI} from '/node_modules/three/examples/jsm/libs/lil-gui.module.min.js';
+    import {RoomEnvironment} from '/node_modules/three/examples/jsm/environments/RoomEnvironment.js';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import {MTLLoader} from 'three/addons/loaders/MTLLoader.js'
+    import {OBJLoader} from 'three/addons/loaders/OBJLoader.js'
+    import {FBXLoader} from 'three/addons/loaders/FBXLoader.js'
+    import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js'
+
+    const fileName = [[@{__${response?.fileName}__}]];
+    const extension = [[@{__${response?.extension}__}]];
+    const isBool = [[@{__${response?.isBool}__}]];
+    const myLoader = document.querySelector('#loader');
+    const objPath = 'https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/obj/';
+    const fbxPath = 'https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/fbx/';
+    const gltfPath = 'https://image-test-suyoung.s3.ap-northeast-2.amazonaws.com/gltf/';
+
+
+
+    function getObjectsKeys(obj) {
+        const keys = [];
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    }
+
+
+    function handleColorChange(color, converSRGBToLinear = false) {
+        return function (value) {
+            if (typeof value === 'string') {
+                value = value.replace('#', '0x');
+            }
+            color.setHex(value);
+            if (converSRGBToLinear === true) color.convertSRGBToLinear();
+        };
+    }
+
+    function handleLight(light) {
+        return function (value) {
+
+            light.intensity = value;
+
+        };
+    }
+
+
+    function guiScene(gui, scene) {
+
+        const folder = gui.addFolder('Scene');
+
+        const data = {
+            background: '#000000',
+            'ambient light': ambientLight.color.getHex(),
+            'ambient brightness': 2
+        };
+
+        folder.addColor(data, 'ambient light').onChange(handleColorChange(ambientLight.color, true));
+        folder.add(data, 'ambient brightness', 1, 10).step(0.1).onChange(handleLight(ambientLight));
+
+        guiSceneFog(folder, scene);
+
+    }
+
+    function guiSceneFog(folder, scene) {
+        const fogFolder = folder.addFolder('scene.fog');
+        const fog = new THREE.Fog(0x3f7b9d, 0, 60);
+        const data = {
+            fog: {
+                'THREE.Fog()': false,
+                'scene.fog.color': fog.color.getHex()
+            }
+        };
+
+        fogFolder.add(data.fog, 'THREE.Fog()').onChange(function (useFog) {
+            if (useFog) {
+                scene.fog = fog;
+            } else {
+                scene.fog = null;
+            }
+        });
+        fogFolder.addColor(data.fog, 'scene.fog.color').onChange(handleColorChange(fog.color));
+
+    }
+
+
+    const extensionKey = {
+        obj: '.obj',
+        fbx: '.fbx',
+    }
+
+    const extensionKeys = getObjectsKeys(extensionKey)
+    var request = {
+        width : 2,
+        depth : 2,
+        height : 2,
+        upperFloor : 2,
+        ringFrequency : 2,
+        gapFrequency : 1.01,
+        extension : extensionKey.obj
+    };
+    function guiParameter(gui) {
+        const data = {
+            Width: 2,
+            Depth: 2,
+            Height: 2,
+            Upper_Floor: 2,
+            Ring_Frequency: 2,
+            V_Gap_Frequency: 1.01,
+            FileExtension: extensionKey[0]
+
+        };
+        const folder = gui.addFolder('Generate');
+
+        folder.add(data, 'Width', 1, 10).step(1).onChange(setParameter('width'));
+        folder.add(data, 'Depth', 1, 10).step(1).onChange(setParameter('depth'));
+        folder.add(data, 'Height', 1, 10).step(1).onChange(setParameter('height'));
+        folder.add(data, 'Upper_Floor', 1, 10).step(1).onChange(setParameter('upperFloor'));
+        folder.add(data, 'Ring_Frequency', 1, 10).step(1).onChange(setParameter('ringFrequency'));
+        folder.add(data, 'V_Gap_Frequency', 0.000, 3).step(0.01).onChange(setParameter('gapFrequency'));
+        folder.add({FileExtension:'.obj'}, 'FileExtension', extensionKeys).onChange(setParameter('extension'));
+        folder.add({
+            x: function () {
+                myLoader.style.display = "block";
+                postBlender()
+            }
+        }, 'x').name('Generate');
+        getAfterGenerate(folder, gui)
+
+    }
+
+    function getAfterGenerate(folder) {
+        if (isBool === 'true') {
+            const afterGenerateFolder = folder.addFolder('Home & Down');
+            afterGenerateFolder.add({
+                x: function () {
+                }
+            }, 'x').name('Download');
+            afterGenerateFolder.add({
+                x: function () {
+                    location.href = '/blender'
+                }
+            }, 'x').name('Home');
+        }
+    }
+
+    function postBlender() {
+        const form = document.createElement('form');
+        form.setAttribute('method','POST');
+        form.setAttribute('action','/blender');
+        for(const key in request) {
+            const hiddenField = document.createElement("input");
+            hiddenField.setAttribute("type", "hidden");
+            hiddenField.setAttribute("name", key);
+            hiddenField.setAttribute("value", request[key]);
+            form.appendChild(hiddenField);
+        }
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function setParameter(key) {
+        return function (value) {
+            if(key === 'extension') {
+                request[key] = extensionKey[value];
+            } else {
+                request[key] = value
+            }
+        };
+
+    }
+
+
+    let gui = new GUI();
+
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    document.body.appendChild(renderer.domElement);
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x444444);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 1, 10000);
+    camera.position.z = 50;
+
+    const ambientLight = new THREE.AmbientLight(0xf9eed7, 2);
+    scene.add(ambientLight);
+
+    const light1 = new THREE.PointLight(0xE6E6E6, 1, 0);
+    light1.position.set(0, 200, 0);
+    scene.add(light1);
+
+    const light2 = new THREE.PointLight(0xE6E6E6, 1, 0);
+    light2.position.set(100, 200, 100);
+    scene.add(light2);
+
+    const light3 = new THREE.PointLight(0xE6E6E6, 1, 0);
+    light3.position.set(-100, -200, -100);
+    scene.add(light3);
+
+    var hemiLight = new THREE.HemisphereLight(0xE6E6E6, 0xE6E6E6, 0.50);
+    scene.add(hemiLight);
+    var dirLight = new THREE.DirectionalLight(0xE6E6E6, 0.50);
+    scene.add(dirLight);
+
+
+    // todo mtl, obj 추가 & Viewer 호출부
+    const manager = new THREE.LoadingManager();
+
+    manager.onLoad = function () {
+        myLoader.style.display = "none";
+        console.log('Loading complete!');
+    };
+
+    manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+
+        console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+
+    };
+
+    guiScene(gui, scene);
+    guiParameter(gui)
+    if (extension === '.obj') {
+        objLoader()
+    } else if (extension === '.fbx') {
+        fbxLoader()
+    } else if (extension === '.gltf') {
+        gltfLoader()
+    }
+
+
+
+
+
+    function objLoader() {
+
+        let mtlLoader = new MTLLoader(manager);
+        mtlLoader.setPath(objPath)
+
+        mtlLoader.load('model/' + fileName + '.mtl', function (mater) {
+            var materials = mater;
+            materials.preload();
+            const objLoader = new OBJLoader(manager);
+            console.log(materials.materials)
+            objLoader.setMaterials(materials);
+            objLoader.setPath(objPath)
+            objLoader.load('model/' + fileName + '.obj', function (object) {
+                    scene.add(object);
+                }, function (xhr) {
+                    console.log('objLoader' + (xhr.loaded / xhr.total) * 100 + '% loaded');
+                }
+            );
+        });
+    }
+
+    function fbxLoader() {
+        const fbxLoader = new FBXLoader(manager);
+        fbxLoader.setPath(fbxPath);
+        fbxLoader.load('model/' + fileName + '.fbx', function (object) {
+            scene.add(object);
+        }, function (xhr) {
+            console.log('fbxLoader' + (xhr.loaded / xhr.total) * 100 + '% loaded');
+        });
+    }
+    function gltfLoader() {
+        let loader = new GLTFLoader(manager);
+        loader.setPath(gltfPath)
+        loader.load('model/' + fileName + '.gltf', function(gltf){
+            if (fileName === 'scene') {
+                let model;
+                model = gltf.scene.children[0];
+                model.scale.set(0.5, 0.5, 0.5);
+            }
+            scene.add(gltf.scene);
+        }, function (xhr) {
+            console.log('fbxLoader' + (xhr.loaded / xhr.total) * 100 + '% loaded');
+        });
+    }
+
+
+    let prevFog = false;
+
+    function render() {
+
+        requestAnimationFrame(render);
+
+
+        if (prevFog !== scene.fog) {
+            prevFog = scene.fog;
+
+        }
+        renderer.render(scene, camera);
+
+    }
+
+    window.addEventListener('resize', function () {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+    }, false);
+
+    let controls;
+    controls = new OrbitControls(camera, renderer.domElement);
+    render();
+
+</script>
+</body>
+</html>
