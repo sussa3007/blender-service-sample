@@ -4,7 +4,8 @@ import lombok.Getter;
 
 public enum FileProperty {
 
-    OBJ_DIR_NAME("obj/model");
+    OBJ_DIR_NAME("obj/model"),
+    FBX_DIR_NAME("fbx/model");
 
     @Getter
     private final String name;
